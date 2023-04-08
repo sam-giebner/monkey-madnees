@@ -1,4 +1,4 @@
-from curses import KEY_LEFT, KEY_RIGHT
+
 import pygame
 import sys
 import random
@@ -8,7 +8,7 @@ pygame.init()
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 1000
 
-MONKEY_SPEED = 5
+MONKEY_SPEED = 10
 
 GREEN = (0,255,0)
 BLUE = (0,0,255)
@@ -24,6 +24,9 @@ gravity = 2
 
 score = 0
 
+happy_sound = pygame.mixer.Sound("audio/happy-monkey.wav")
+sad_sound = pygame.mixer.Sound("audio/sad-monkey.wav")
+
 background = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
 background.fill('Blue')
 
@@ -33,21 +36,19 @@ ground = pygame.Surface((SCREEN_WIDTH,50))
 ground.fill('Green')
 ground_rect = ground.get_rect(midbottom = (SCREEN_WIDTH/2,SCREEN_HEIGHT))
 
-monkey = pygame.image.load('images/monkey.png').convert_alpha()
-monkey = pygame.transform.scale(monkey,(50,50))
+monkey = pygame.transform.scale_by(pygame.image.load('images/monkey.png').convert_alpha(),0.1)
 monkey_x, monkey_y = [SCREEN_WIDTH/2,SCREEN_HEIGHT-50]
 monkey_rect = monkey.get_rect(midbottom = (monkey_x, monkey_y))
 
 momentum = 0
 
-banana = pygame.image.load('images/banana.png').convert_alpha()
-banana = pygame.transform.scale(banana,(50,50))
+banana = pygame.transform.scale_by(pygame.image.load('images/banana.png').convert_alpha(),0.06)
 banana_x, banana_y = [random.randint(10,SCREEN_WIDTH-10),-10]
 banana_rect = banana.get_rect(midtop = (banana_x,banana_y))
 
-    
+play = True
 
-while True:
+while play:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -74,18 +75,30 @@ while True:
     monkey_rect.x +=  momentum
     
     if momentum != 0:
-        momentum = momentum * 0.75
+        momentum = momentum * 0.9
+
+    if monkey_rect.x <= 0:
+        momentum = 0
+        monkey_rect.x = 5
+
+    if monkey_rect.x >= SCREEN_WIDTH - 20:
+        momentum = 0
+        monkey_rect.x = SCREEN_WIDTH - 50
     
     if banana_rect.colliderect(ground_rect) > 0:
-    
-        print('Game over')
+
+        pygame.mixer.Sound.play(sad_sound)
+        
+        banana_rect.y = -10
+        banana_rect.x = random.randint(10,SCREEN_WIDTH-10)
     
     if banana_rect.colliderect(monkey_rect) > 0:
         print('Win!')
+        pygame.mixer.Sound.play(happy_sound)
         
         score += 10
 
-        gravity +=0.5
+        gravity += 0.4
         
         banana_rect.y = -10
         banana_rect.x = random.randint(10,SCREEN_WIDTH-10)
